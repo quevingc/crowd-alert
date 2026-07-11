@@ -100,6 +100,29 @@ const Utils = {
     return div.innerHTML;
   },
 
+  /** Validate a facility submission before sending to the API */
+  validateFacility(facility) {
+    const errors = [];
+    if (!facility.name || facility.name.trim().length < 3) {
+      errors.push("Facility name must be at least 3 characters.");
+    }
+    if (!facility.type || !CONFIG.FACILITIES[facility.type]) {
+      errors.push("Please select a valid facility type.");
+    }
+    if (
+      typeof facility.lat !== "number" ||
+      typeof facility.lng !== "number" ||
+      Math.abs(facility.lat) > 90 ||
+      Math.abs(facility.lng) > 180
+    ) {
+      errors.push("A valid location is required (pin on map or use GPS).");
+    }
+    if (facility.images && facility.images.length > CONFIG.MAX_IMAGES_PER_REPORT) {
+      errors.push(`You can attach up to ${CONFIG.MAX_IMAGES_PER_REPORT} images.`);
+    }
+    return { valid: errors.length === 0, errors };
+  },
+
   /** Validate a report submission before sending to the API */
   validateReport(report) {
     const errors = [];
@@ -202,10 +225,10 @@ const Utils = {
     }
   },
 
-  /** Build a shareable URL for a report */
-  buildShareLink(reportId) {
+  /** Build a shareable URL for a report or facility (paramName: "report" | "facility") */
+  buildShareLink(id, paramName = "report") {
     const url = new URL(window.location.href);
-    url.searchParams.set("report", reportId);
+    url.searchParams.set(paramName, id);
     return url.toString();
   },
 
