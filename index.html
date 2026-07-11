@@ -118,8 +118,13 @@
   <!-- ===================== Facilities View ===================== -->
   <section id="view-facilities" class="view">
     <div class="panel">
-      <h3>Evacuation Centers &amp; Hospitals</h3>
-      <p class="muted">These locations are also shown as markers on the Map view. Use “Nearest Safe Zone” from any report to get simple straight-line routing.</p>
+      <div class="facilities-header">
+        <div>
+          <h3>Evacuation Centers, Hospitals &amp; Safe Points</h3>
+          <p class="muted">These locations also appear as markers on the Map view. Anyone can add a facility — evacuation centers, hospitals, or community safe points — with a location, photos, and optional details.</p>
+        </div>
+        <button id="openFacilityForm" class="btn-primary" style="width:auto">➕ Add Facility</button>
+      </div>
       <div id="facilitiesList"></div>
     </div>
   </section>
@@ -188,6 +193,71 @@
   </div>
 </div>
 
+<!-- ===================== Facility Form Modal ===================== -->
+<div class="modal" id="facilityFormModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="facilityFormTitle">Add Facility</h2>
+      <button class="modal-close" id="closeFacilityForm" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <form id="facilityForm">
+      <div class="form-group">
+        <label for="facilityName">Facility Name</label>
+        <input type="text" id="facilityName" name="name" required minlength="3" maxlength="100" placeholder="e.g. Barangay Hall Evacuation Center" />
+      </div>
+      <div class="form-group">
+        <label for="facilityType">Facility Type</label>
+        <select id="facilityType" name="type" required>
+          <option value="evacuation">🏠 Evacuation Center</option>
+          <option value="hospital">🏥 Hospital</option>
+          <option value="other">📍 Community Safe Point</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="facilityCapacity">Capacity (optional)</label>
+        <input type="text" id="facilityCapacity" name="capacity" maxlength="20" placeholder="e.g. 300 people" />
+      </div>
+      <div class="form-group">
+        <label for="facilityContact">Contact (optional)</label>
+        <input type="text" id="facilityContact" name="contact" maxlength="60" placeholder="Phone number or contact name" />
+      </div>
+      <div class="form-group">
+        <label for="facilityDescription">Description (optional)</label>
+        <textarea id="facilityDescription" name="description" maxlength="500" placeholder="Anything responders or evacuees should know"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <div class="location-row">
+          <button type="button" id="facilityUseGpsBtn">Use My Location</button>
+          <button type="button" id="facilityPinOnMapBtn">Pin on Map</button>
+          <span id="selectedFacilityLocationLabel">No location selected</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="facilityImageInput">Photos</label>
+        <input type="file" id="facilityImageInput" accept="image/*" multiple />
+        <div class="img-previews" id="facilityImagePreviews"></div>
+      </div>
+      <div class="form-group">
+        <label for="facilitySubmittedBy">Your Alias (optional)</label>
+        <input type="text" id="facilitySubmittedBy" name="submittedBy" placeholder="Anonymous" maxlength="40" />
+      </div>
+      <button type="submit" class="btn-primary">Submit</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== Facility Detail Modal ===================== -->
+<div class="modal" id="facilityDetailModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Facility Details</h2>
+      <button class="modal-close" data-close-modal aria-label="Close">✕</button>
+    </div>
+    <div id="facilityDetailBody"></div>
+  </div>
+</div>
+
 <!-- ===================== Emergency Contacts Modal ===================== -->
 <div class="modal" id="contactsModal">
   <div class="modal-content">
@@ -218,6 +288,7 @@
 <script src="js/notifications.js"></script>
 <script src="js/map.js"></script>
 <script src="js/reports.js"></script>
+<script src="js/facilities.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/sos.js"></script>
 <script src="js/admin.js"></script>
