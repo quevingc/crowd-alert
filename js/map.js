@@ -122,8 +122,8 @@ const MapModule = {
     }
   },
 
-  /** Render evacuation centers / hospitals */
-  renderFacilities(facilities) {
+  /** Render evacuation centers / hospitals / community safe points */
+  renderFacilities(facilities, onOpenFacility) {
     MapModule.facilitiesLayer.clearLayers();
     facilities.forEach((f) => {
       const info = CONFIG.FACILITIES[f.type] || CONFIG.FACILITIES.evacuation;
@@ -134,10 +134,16 @@ const MapModule = {
         iconAnchor: [15, 30],
       });
       const marker = L.marker([f.lat, f.lng], { icon }).bindPopup(
-        `<strong>${info.icon} ${Utils.escapeHTML(f.name)}</strong><br/>${info.label}${
+        `<div class="map-popup">
+           <strong>${info.icon} ${Utils.escapeHTML(f.name)}</strong><br/>${info.label}${
           f.capacity ? `<br/>Capacity: ${f.capacity}` : ""
-        }${f.contact ? `<br/>Contact: ${Utils.escapeHTML(f.contact)}` : ""}`
+        }${f.contact ? `<br/>Contact: ${Utils.escapeHTML(f.contact)}` : ""}
+           <br/><button class="btn-link" data-open-facility="${f.facilityId}">View details →</button>
+         </div>`
       );
+      marker.on("click", () => {
+        if (onOpenFacility) onOpenFacility(f.facilityId);
+      });
       MapModule.facilitiesLayer.addLayer(marker);
     });
   },
