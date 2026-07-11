@@ -17,6 +17,7 @@ const App = {
 
     App.bindNav();
     App.bindReportForm();
+    App.bindFacilityForm();
     App.bindFilters();
     App.bindModals();
     App.bindShareFromURL();
@@ -36,13 +37,10 @@ const App = {
     App.renderCurrentView();
     Notifications.checkNearby(Reports.all);
     App.updateOfflineBadge();
-    try {
-      const facilities = await Api.getFacilities();
-      MapModule.renderFacilities(facilities || []);
-      App.facilities = facilities || [];
-    } catch {
-      App.facilities = [];
-    }
+    await Facilities.loadAll();
+    App.facilities = Facilities.all;
+    MapModule.renderFacilities(App.facilities, App.openFacilityDetail);
+    App.renderFacilitiesList();
   },
 
   startAutoRefresh() {
@@ -92,19 +90,24 @@ const App = {
     if (!container) return;
     const facilities = App.facilities || [];
     if (facilities.length === 0) {
-      container.innerHTML = `<p class="empty-state">No facilities registered yet. Admins can add rows to the Facilities sheet.</p>`;
+      container.innerHTML = `<p class="empty-state">No facilities yet. Be the first to add an evacuation center, hospital, or safe point near you.</p>`;
       return;
     }
     container.innerHTML = facilities
       .map((f) => {
         const info = CONFIG.FACILITIES[f.type] || CONFIG.FACILITIES.evacuation;
         return `
-        <div class="admin-row">
-          <span>${info.icon} <strong>${Utils.escapeHTML(f.name)}</strong></span>
-          <span class="muted">${info.label}${f.capacity ? ` · Capacity ${f.capacity}` : ""}${
-          f.contact ? ` · ${Utils.escapeHTML(f.contact)}` : ""
-        }</span>
-        </div>`;
+        <button class="report-list-item" data-open-facility="${f.facilityId}">
+          <span class="dot" style="background:${info.color}"></span>
+          <div class="report-list-item-body">
+            <strong>${info.icon} ${Utils.escapeHTML(f.name)}</strong>
+            <span class="muted">${info.label}${f.capacity ? ` · Capacity ${f.capacity}` : ""}</span>
+          </div>
+          <div class="report-list-item-meta">
+            <span class="badge-outline">✔ ${f.upvotes || 0}</span>
+            <small>${Utils.timeAgo(f.lastUpdated || f.timestamp)}</small>
+          </div>
+        </button>`;
       })
       .join("");
   },
@@ -253,6 +256,259 @@ const App = {
     }
   },
 
+  // ---------------- Facility Form ----------------
+  selectedFacilityLatLng: null,
+
+  bindFacilityForm() {
+    const form = document.getElementById("facilityForm");
+    if (!form) return;
+
+    document.getElementById("openFacilityForm")?.addEventListener("click", () => App.openFacilityForm());
+    document.getElementById("closeFacilityForm")?.addEventListener("click", () => App.closeFacilityForm());
+
+    document.getElementById("facilityUseGpsBtn")?.addEventListener("click", async () => {
+      try {
+        const pos = await Utils.getCurrentPosition();
+        App.setSelectedFacilityLocation(pos.lat, pos.lng);
+      } catch (e) {
+        alert("Could not get GPS location: " + e.message);
+      }
+    });
+
+    document.getElementById("facilityPinOnMapBtn")?.addEventListener("click", async () => {
+      App.closeFacilityForm();
+      App.switchView("map");
+      alert("Tap anywhere on the map to drop a pin for this facility.");
+      const { lat, lng } = await MapModule.enablePinDrop();
+      App.setSelectedFacilityLocation(lat, lng);
+      App.openFacilityForm();
+    });
+
+    document.getElementById("facilityImageInput")?.addEventListener("change", App.handleFacilityImageSelect);
+
+    form.addEventListener("submit", App.handleFacilityFormSubmit);
+  },
+
+  openFacilityForm() {
+    Facilities.editingFacilityId = null;
+    document.getElementById("facilityFormTitle").textContent = "Add Facility";
+    document.getElementById("facilityForm").reset();
+    Facilities.currentImages = [];
+    App.renderFacilityImagePreviews();
+    document.getElementById("facilityFormModal")?.classList.add("modal-open");
+  },
+
+  closeFacilityForm() {
+    document.getElementById("facilityFormModal")?.classList.remove("modal-open");
+    MapModule.disablePinDrop();
+  },
+
+  setSelectedFacilityLocation(lat, lng) {
+    App.selectedFacilityLatLng = { lat, lng };
+    const label = document.getElementById("selectedFacilityLocationLabel");
+    if (label) label.textContent = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  },
+
+  async handleFacilityImageSelect(e) {
+    const files = Array.from(e.target.files || []).slice(0, CONFIG.MAX_IMAGES_PER_REPORT);
+    for (const file of files) {
+      if (file.size > CONFIG.MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+        alert(`${file.name} exceeds ${CONFIG.MAX_IMAGE_SIZE_MB}MB and was skipped.`);
+        continue;
+      }
+      try {
+        const base64 = await Utils.fileToResizedBase64(file);
+        Facilities.currentImages.push(base64);
+      } catch {
+        console.warn("Could not process image", file.name);
+      }
+    }
+    App.renderFacilityImagePreviews();
+  },
+
+  renderFacilityImagePreviews() {
+    const container = document.getElementById("facilityImagePreviews");
+    if (!container) return;
+    container.innerHTML = Facilities.currentImages
+      .map(
+        (src, i) =>
+          `<div class="img-preview"><img src="${src}" alt="Preview ${i + 1}"/><button type="button" data-remove-facility-img="${i}">✕</button></div>`
+      )
+      .join("");
+    container.querySelectorAll("[data-remove-facility-img]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        Facilities.currentImages.splice(parseInt(btn.dataset.removeFacilityImg, 10), 1);
+        App.renderFacilityImagePreviews();
+      });
+    });
+  },
+
+  async handleFacilityFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const type = form.type.value;
+    const capacity = form.capacity.value;
+    const contact = form.contact.value;
+    const description = form.description.value;
+    const submittedBy = form.submittedBy.value;
+
+    if (!App.selectedFacilityLatLng) {
+      alert("Please set a location using GPS or by pinning on the map.");
+      return;
+    }
+
+    const dupes = Facilities.findPossibleDuplicates({ type, ...App.selectedFacilityLatLng });
+    if (dupes.length > 0 && !Facilities.editingFacilityId) {
+      const proceed = confirm(
+        `${dupes.length} similar facility already listed nearby. Submit anyway?`
+      );
+      if (!proceed) return;
+    }
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting…";
+
+    try {
+      if (Facilities.editingFacilityId) {
+        await Facilities.update(Facilities.editingFacilityId, {
+          name,
+          type,
+          capacity,
+          contact,
+          description,
+          lat: App.selectedFacilityLatLng.lat,
+          lng: App.selectedFacilityLatLng.lng,
+          images: Facilities.currentImages,
+        });
+        App.toast("Facility updated. Thank you!");
+      } else {
+        await Facilities.submit({
+          name,
+          type,
+          capacity,
+          contact,
+          description,
+          submittedBy,
+          lat: App.selectedFacilityLatLng.lat,
+          lng: App.selectedFacilityLatLng.lng,
+          images: Facilities.currentImages,
+        });
+        App.toast("Facility added. Thank you for helping your community!");
+      }
+      App.closeFacilityForm();
+      App.selectedFacilityLatLng = null;
+      await App.refreshAll();
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit";
+    }
+  },
+
+  // ---------------- Facility Detail Modal ----------------
+  async openFacilityDetail(facilityId) {
+    const facility = Facilities.all.find((f) => f.facilityId === facilityId);
+    if (!facility) return;
+    const modal = document.getElementById("facilityDetailModal");
+    const info = CONFIG.FACILITIES[facility.type] || CONFIG.FACILITIES.evacuation;
+    const confidence = Facilities.computeConfidenceScore(facility);
+
+    document.getElementById("facilityDetailBody").innerHTML = `
+      <div class="detail-header">
+        <span class="badge" style="background:${info.color}">${info.icon} ${info.label}</span>
+        <span class="badge-outline">Confidence: ${confidence}%</span>
+      </div>
+      ${facility.description ? `<p>${Utils.escapeHTML(facility.description)}</p>` : ""}
+      <div class="image-gallery">
+        ${(facility.images || []).map((src) => `<img src="${src}" class="gallery-img" alt="Facility photo"/>`).join("")}
+      </div>
+      <ul class="detail-meta">
+        <li><strong>Name:</strong> ${Utils.escapeHTML(facility.name)}</li>
+        <li><strong>Capacity:</strong> ${facility.capacity || "—"}</li>
+        <li><strong>Contact:</strong> ${Utils.escapeHTML(facility.contact || "—")}</li>
+        <li><strong>Added:</strong> ${Utils.formatDate(facility.timestamp)}</li>
+        <li><strong>Last updated:</strong> ${Utils.formatDate(facility.lastUpdated)}</li>
+        <li><strong>Submitted by:</strong> ${Utils.escapeHTML(facility.submittedBy || "Anonymous")}</li>
+        <li><strong>Upvotes:</strong> ${facility.upvotes || 0}</li>
+      </ul>
+      <div class="detail-actions">
+        <button id="upvoteFacilityBtn" data-facility-id="${facility.facilityId}">✔ Verify / Upvote</button>
+        <button id="editFacilityBtn" data-facility-id="${facility.facilityId}">✎ Edit</button>
+        <button id="historyFacilityBtn" data-facility-id="${facility.facilityId}">🕘 History</button>
+        <button id="shareFacilityBtn" data-facility-id="${facility.facilityId}">🔗 Share</button>
+      </div>
+      <div id="facilityDetailExtra"></div>
+    `;
+    modal.classList.add("modal-open");
+  },
+
+  startFacilityEdit(facilityId) {
+    const facility = Facilities.all.find((f) => f.facilityId === facilityId);
+    if (!facility) return;
+    Facilities.editingFacilityId = facilityId;
+    Facilities.currentImages = [...(facility.images || [])];
+    document.getElementById("facilityDetailModal")?.classList.remove("modal-open");
+    document.getElementById("facilityFormTitle").textContent = "Edit Facility";
+    const form = document.getElementById("facilityForm");
+    form.name.value = facility.name;
+    form.type.value = facility.type;
+    form.capacity.value = facility.capacity || "";
+    form.contact.value = facility.contact || "";
+    form.description.value = facility.description || "";
+    App.setSelectedFacilityLocation(facility.lat, facility.lng);
+    App.renderFacilityImagePreviews();
+    document.getElementById("facilityFormModal")?.classList.add("modal-open");
+  },
+
+  async showFacilityHistory(facilityId) {
+    const extra = document.getElementById("facilityDetailExtra");
+    extra.innerHTML = `<p>Loading audit trail…</p>`;
+    try {
+      const chain = await Facilities.getHistory(facilityId);
+      const verification = await BlockchainClient.verifyChain(chain || []);
+      extra.innerHTML = `
+        <h4>Version History ${
+          verification.valid
+            ? '<span class="badge" style="background:#43A047">✔ Verified Unbroken</span>'
+            : '<span class="badge" style="background:#E53935">⚠ Tamper Detected</span>'
+        }</h4>
+        <ul class="history-list">
+          ${(chain || [])
+            .map(
+              (b) => `<li>
+                <strong>${b.action}</strong> by ${Utils.escapeHTML(b.editorId || "unknown")}
+                <br/><small>${Utils.formatDate(b.timestamp)}</small>
+                <br/><code>${BlockchainClient.shortHash(b.currentHash)}</code>
+              </li>`
+            )
+            .join("")}
+        </ul>`;
+    } catch (e) {
+      extra.innerHTML = `<p class="error">Could not load history: ${e.message}</p>`;
+    }
+  },
+
+  showFacilityShare(facilityId) {
+    const link = Utils.buildShareLink(facilityId, "facility");
+    const extra = document.getElementById("facilityDetailExtra");
+    extra.innerHTML = `
+      <div class="share-box">
+        <input type="text" readonly value="${link}" id="facilityShareLinkInput"/>
+        <button id="copyFacilityShareLinkBtn">Copy</button>
+        <div id="facilityQrcodeContainer" style="margin-top:10px"></div>
+      </div>`;
+    document.getElementById("copyFacilityShareLinkBtn").addEventListener("click", async () => {
+      await Utils.copyToClipboard(link);
+      App.toast("Link copied!");
+    });
+    if (typeof QRCode !== "undefined") {
+      new QRCode(document.getElementById("facilityQrcodeContainer"), { text: link, width: 140, height: 140 });
+    }
+  },
+
   // ---------------- Filters / Search ----------------
   bindFilters() {
     ["filterType", "filterStatus"].forEach((id) => {
@@ -327,6 +583,39 @@ const App = {
     const openReportEl = e.target.closest("[data-open-report]");
     if (openReportEl) {
       App.openReportDetail(openReportEl.getAttribute("data-open-report"));
+      return;
+    }
+
+    const openFacilityEl = e.target.closest("[data-open-facility]");
+    if (openFacilityEl) {
+      App.openFacilityDetail(openFacilityEl.getAttribute("data-open-facility"));
+      return;
+    }
+
+    if (e.target.id === "upvoteFacilityBtn") {
+      try {
+        await Facilities.upvote(e.target.dataset.facilityId);
+        App.toast("Thanks for verifying this facility!");
+        await App.refreshAll();
+        App.openFacilityDetail(e.target.dataset.facilityId);
+      } catch (err) {
+        alert(err.message);
+      }
+      return;
+    }
+
+    if (e.target.id === "editFacilityBtn") {
+      App.startFacilityEdit(e.target.dataset.facilityId);
+      return;
+    }
+
+    if (e.target.id === "historyFacilityBtn") {
+      App.showFacilityHistory(e.target.dataset.facilityId);
+      return;
+    }
+
+    if (e.target.id === "shareFacilityBtn") {
+      App.showFacilityShare(e.target.dataset.facilityId);
       return;
     }
 
@@ -479,8 +768,15 @@ const App = {
   bindShareFromURL() {
     const params = new URLSearchParams(window.location.search);
     const reportId = params.get("report");
+    const facilityId = params.get("facility");
     if (reportId) {
       setTimeout(() => App.openReportDetail(reportId), 800);
+    }
+    if (facilityId) {
+      setTimeout(() => {
+        App.switchView("facilities");
+        App.openFacilityDetail(facilityId);
+      }, 800);
     }
   },
 
