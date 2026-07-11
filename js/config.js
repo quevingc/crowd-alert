@@ -46,6 +46,7 @@ const CONFIG = {
   FACILITIES: {
     evacuation: { label: "Evacuation Center", color: "#2E7D32", icon: "🏠" },
     hospital: { label: "Hospital", color: "#C62828", icon: "🏥" },
+    other: { label: "Community Safe Point", color: "#455A64", icon: "📍" },
   },
 
   // Pagination / limits
