@@ -22,6 +22,7 @@ const APP_SHELL = [
   "./js/notifications.js",
   "./js/map.js",
   "./js/reports.js",
+  "./js/facilities.js",
   "./js/dashboard.js",
   "./js/sos.js",
   "./js/admin.js",
