@@ -57,7 +57,8 @@ emergency-report-app/
    Run `setupSpreadsheet()` once to create the sheet tabs. Deploy as a
    **Web app** (Execute as: Me, Who has access: Anyone). Copy the `/exec` URL.
    Full details in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-2. **Frontend:** Paste that URL into `js/config.js` → `CONFIG.API_URL`.
+2. **Frontend:** Paste the URL below into `js/config.js` → `CONFIG.API_URL`.
+    GAS URL: https://script.google.com/macros/s/AKfycbypBJ6AuNVfNoP2_17GHheU9xfS5GBoFjmB4JrNwlwcV4tBupnMtNtJktz3-JVf0vE2/exec
 3. **Hosting:** Push this folder to a GitHub repository and enable
    GitHub Pages (Settings → Pages → Deploy from branch → `/ (root)`).
 4. Open the published GitHub Pages URL. Change the default admin PIN in the
