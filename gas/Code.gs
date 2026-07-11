@@ -55,13 +55,20 @@ function handleRequest_(e) {
       registerUser: () => Users_.register(params.user),
 
       getFacilities: () => Facilities_.list(),
+      createFacility: () => Facilities_.create(params.facility),
+      updateFacility: () =>
+        Facilities_.update(params.facilityId, params.changes, params.editorId, params.editorAlias),
+      upvoteFacility: () => Facilities_.upvote(params.facilityId, params.userId),
+      moderateFacility: () =>
+        Facilities_.moderate(params.facilityId, params.moderatorId, params.action_, params.reason),
 
       verifyAdminPin: () => Utils_.verifyAdminPin(params.pin),
     };
 
-    // moderateReport's action field collides with the router's `action` key,
-    // so the frontend sends it as `action` too — normalize here.
-    if (action === "moderateReport" && params.action) {
+    // moderateReport/moderateFacility's action field collides with the
+    // router's `action` key, so the frontend sends it as `action` too —
+    // normalize here before dispatch.
+    if ((action === "moderateReport" || action === "moderateFacility") && params.action) {
       params.action_ = params.action;
     }
 
