@@ -55,10 +55,6 @@ const SOS = {
 
   /** Static directory — override/extend via Settings sheet in production */
   emergencyContacts: [
-    { name: "National Emergency Hotline", number: "911" },
-    { name: "Red Cross", number: "143" },
-    { name: "Fire Department", number: "160" },
-    { name: "Coast Guard (Flood/Maritime)", number: "165" },
-    { name: "Disaster Risk Reduction Office", number: "117" },
+    { name: "National Emergency Hotline", number: "09606071677" },
   ],
 };
