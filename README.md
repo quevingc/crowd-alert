@@ -5,7 +5,7 @@ A free, open, crowdsourced platform for reporting and tracking emergencies
 hazards) on a live map — with a tamper-evident audit trail on every edit.
 
 **Stack:** HTML/CSS/JS (frontend) · Leaflet + OpenStreetMap (map) ·
-Google Apps Script + Google Sheets (backend/database) · GitHub Pages (hosting)
+Google Apps Script + Google Sheets (backend/database) · GitHub Pages (hosting) 
 
 ---
 
