@@ -299,6 +299,20 @@ input, select, textarea { font-family: inherit; }
 }
 .panel-wide { grid-column: 1 / -1; }
 
+.facilities-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.facilities-header p { margin: 4px 0 0; max-width: 60ch; }
+@media (max-width: 600px) {
+  .facilities-header { flex-direction: column; }
+  .facilities-header button { width: 100%; }
+}
+
 /* ---------- Forms ---------- */
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; }
