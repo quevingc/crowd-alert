@@ -87,9 +87,21 @@ const Api = {
     return Api.post("registerUser", { user });
   },
 
-  // ---- Facilities (evacuation centers / hospitals) ----
+  // ---- Facilities (evacuation centers / hospitals / community safe points) ----
   getFacilities() {
     return Api.post("getFacilities", {});
+  },
+  createFacility(facility) {
+    return Api.post("createFacility", { facility });
+  },
+  updateFacility(facilityId, changes, editorId, editorAlias) {
+    return Api.post("updateFacility", { facilityId, changes, editorId, editorAlias });
+  },
+  upvoteFacility(facilityId, userId) {
+    return Api.post("upvoteFacility", { facilityId, userId });
+  },
+  moderateFacility(facilityId, moderatorId, action, reason) {
+    return Api.post("moderateFacility", { facilityId, moderatorId, action, reason });
   },
 
   // ---- Admin moderation ----
