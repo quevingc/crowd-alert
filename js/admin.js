@@ -25,7 +25,7 @@ const Admin = {
   async moderate(reportId, action, reason = "") {
     if (!Admin.authenticated) throw new Error("Not authenticated.");
     // action: "hide" | "unhide" | "resolve" | "delete-flagged"
-    return Api.moderateReport(reportId, "admin", action, reason);
+    return Api.moderateReport(reportId, "admin", action, reason, Admin.pin);
   },
 
   renderPanel(reports, container) {

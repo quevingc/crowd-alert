@@ -100,12 +100,12 @@ const Api = {
   upvoteFacility(facilityId, userId) {
     return Api.post("upvoteFacility", { facilityId, userId });
   },
-  moderateFacility(facilityId, moderatorId, action, reason) {
-    return Api.post("moderateFacility", { facilityId, moderatorId, action, reason });
+  moderateFacility(facilityId, moderatorId, modAction, reason, pin) {
+    return Api.post("moderateFacility", { facilityId, moderatorId, modAction, reason, pin });
   },
 
   // ---- Admin moderation ----
-  moderateReport(reportId, moderatorId, action, reason) {
-    return Api.post("moderateReport", { reportId, moderatorId, action, reason });
+  moderateReport(reportId, moderatorId, modAction, reason, pin) {
+    return Api.post("moderateReport", { reportId, moderatorId, modAction, reason, pin });
   },
 };

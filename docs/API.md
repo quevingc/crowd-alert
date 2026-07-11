@@ -56,9 +56,10 @@ Logs a field-level entry per changed field in `Updates`, plus one
 ```
 
 ### `moderateReport` (admin)
+Requires the admin PIN (see `verifyAdminPin`) — rejected with "Invalid admin PIN." otherwise.
 ```json
 { "action": "moderateReport", "reportId": "RPT-...", "moderatorId": "admin",
-  "action": "hide|unhide|resolve|flag|unflag", "reason": "..." }
+  "modAction": "hide|unhide|resolve|flag|unflag", "reason": "...", "pin": "..." }
 ```
 
 ## Ratings

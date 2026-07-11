@@ -148,7 +148,9 @@ const Facilities_ = {
   },
 
   /** Admin moderation: hide / unhide / flag / unflag a facility */
-  moderate(facilityId, moderatorId, action, reason) {
+  moderate(facilityId, moderatorId, action, reason, pin) {
+    if (!Utils_.verifyAdminPin(pin).valid) throw new Error("Invalid admin PIN.");
+
     const existing = Utils_.getRowObject(SHEET_NAMES.FACILITIES, "facilityId", facilityId);
     if (!existing) throw new Error("Facility not found.");
 

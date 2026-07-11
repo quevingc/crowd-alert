@@ -153,7 +153,9 @@ const Reports_ = {
   },
 
   /** Admin moderation: hide / unhide / resolve a report */
-  moderate(reportId, moderatorId, action, reason) {
+  moderate(reportId, moderatorId, action, reason, pin) {
+    if (!Utils_.verifyAdminPin(pin).valid) throw new Error("Invalid admin PIN.");
+
     const existing = Utils_.getRowObject(SHEET_NAMES.REPORTS, "reportId", reportId);
     if (!existing) throw new Error("Report not found.");
 
