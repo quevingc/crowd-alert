@@ -44,6 +44,8 @@ const SHEET_SCHEMAS = {
   ],
   Facilities: [
     "facilityId", "name", "type", "lat", "lng", "capacity", "contact",
+    "description", "submittedBy", "editorId", "upvotes", "flagged",
+    "hidden", "imageCount", "timestamp", "lastUpdated",
   ],
   Images: [
     "imageId", "reportId", "uploadedAt", "base64OrUrl", "caption",
@@ -83,8 +85,16 @@ function setupSpreadsheet() {
   // Seed a couple of sample facilities so the map isn't empty on first run
   const facilities = ss.getSheetByName(SHEET_NAMES.FACILITIES);
   if (facilities.getLastRow() < 2) {
-    facilities.appendRow(["FAC-0001", "City Central Evacuation Center", "evacuation", 14.6091, 121.0223, 500, "+63-000-0000"]);
-    facilities.appendRow(["FAC-0002", "General Hospital", "hospital", 14.6042, 121.0198, "", "+63-000-1111"]);
+    const now = new Date().toISOString();
+    facilities.appendRow([
+      "FAC-0001", "City Central Evacuation Center", "evacuation", 14.6091, 121.0223,
+      "500", "+63-000-0000", "Primary evacuation site for flood-prone barangays.",
+      "System", "system", 0, false, false, 0, now, now,
+    ]);
+    facilities.appendRow([
+      "FAC-0002", "General Hospital", "hospital", 14.6042, 121.0198,
+      "", "+63-000-1111", "", "System", "system", 0, false, false, 0, now, now,
+    ]);
   }
 
   SpreadsheetApp.getUi().alert("Setup complete. All sheets are ready.");
