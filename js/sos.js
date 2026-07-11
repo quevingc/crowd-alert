@@ -53,8 +53,8 @@ const SOS = {
     }
   },
 
-  /** Static directory — override/extend via Settings sheet in production */
+  /** will work out on this later */
   emergencyContacts: [
-    { name: "National Emergency Hotline", number: "09606071677" },
+    { name: "Emergency hotline #1", number: "09xxxxxxxxx" },
   ],
 };
