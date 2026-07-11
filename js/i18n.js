@@ -9,7 +9,7 @@ const I18N = {
 
   dict: {
     en: {
-      appTitle: "CrowdAlert",
+      appTitle: "Paunawa",
       tagline: "Crowdsourced real-time emergency reporting",
       reportIncident: "Report Incident",
       dashboard: "Dashboard",
@@ -39,7 +39,7 @@ const I18N = {
       shareLink: "Share Link",
     },
     es: {
-      appTitle: "CrowdAlert",
+      appTitle: "Paunawa",
       tagline: "Reportes de emergencia en tiempo real colaborativos",
       reportIncident: "Reportar Incidente",
       dashboard: "Panel",
@@ -69,7 +69,7 @@ const I18N = {
       shareLink: "Compartir Enlace",
     },
     fr: {
-      appTitle: "CrowdAlert",
+      appTitle: "Paunawa",
       tagline: "Signalement d'urgences en temps réel participatif",
       reportIncident: "Signaler un Incident",
       dashboard: "Tableau de Bord",
@@ -99,7 +99,7 @@ const I18N = {
       shareLink: "Partager le Lien",
     },
     ar: {
-      appTitle: "CrowdAlert",
+      appTitle: "Paunawa",
       tagline: "الإبلاغ الجماعي عن الطوارئ في الوقت الفعلي",
       reportIncident: "الإبلاغ عن حادث",
       dashboard: "لوحة المعلومات",
@@ -129,7 +129,7 @@ const I18N = {
       shareLink: "مشاركة الرابط",
     },
     tl: {
-      appTitle: "CrowdAlert",
+      appTitle: "Paunawa",
       tagline: "Real-time na pag-uulat ng emerhensiya mula sa publiko",
       reportIncident: "Mag-ulat ng Insidente",
       dashboard: "Dashboard",
