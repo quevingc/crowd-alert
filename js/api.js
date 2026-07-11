@@ -18,6 +18,13 @@ const Api = {
         "API_URL is not configured yet. Set CONFIG.API_URL in js/config.js to your deployed Apps Script Web App URL."
       );
     }
+    // `action` is the reserved dispatch key (see gas/Code.gs router). Guard
+    // against a payload field of the same name silently clobbering it.
+    if ("action" in payload) {
+      throw new Error(
+        `Api.post payload must not contain a reserved "action" field (action="${action}").`
+      );
+    }
     const body = JSON.stringify({ action, ...payload });
     const res = await fetch(CONFIG.API_URL, {
       method: "POST",

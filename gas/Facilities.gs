@@ -149,16 +149,17 @@ const Facilities_ = {
 
   /** Admin moderation: hide / unhide / flag / unflag a facility */
   moderate(facilityId, moderatorId, action, reason, pin) {
-    if (!Utils_.verifyAdminPin(pin).valid) throw new Error("Invalid admin PIN.");
+    Utils_.requireAdminPin(pin);
 
     const existing = Utils_.getRowObject(SHEET_NAMES.FACILITIES, "facilityId", facilityId);
     if (!existing) throw new Error("Facility not found.");
 
     const changes = {};
     if (action === "hide") changes.hidden = true;
-    if (action === "unhide") changes.hidden = false;
-    if (action === "flag") changes.flagged = true;
-    if (action === "unflag") changes.flagged = false;
+    else if (action === "unhide") changes.hidden = false;
+    else if (action === "flag") changes.flagged = true;
+    else if (action === "unflag") changes.flagged = false;
+    else throw new Error(`Unknown moderation action: ${action}`);
 
     changes.lastUpdated = Utils_.nowISO();
     Utils_.updateRow(SHEET_NAMES.FACILITIES, "facilityId", facilityId, changes);

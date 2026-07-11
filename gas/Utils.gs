@@ -85,7 +85,13 @@ const Utils_ = {
 
   verifyAdminPin(pin) {
     const stored = Utils_.getSetting("adminPin", null);
-    return { valid: stored !== null && String(pin) === String(stored) };
+    const provided = String(pin == null ? "" : pin);
+    return { valid: stored !== null && provided !== "" && provided === String(stored) };
+  },
+
+  /** Throw unless a valid admin PIN was supplied — the guard for admin-only actions. */
+  requireAdminPin(pin) {
+    if (!Utils_.verifyAdminPin(pin).valid) throw new Error("Invalid admin PIN.");
   },
 
   /** SHA-256 hex digest using Apps Script's built-in Utilities service */
