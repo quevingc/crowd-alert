@@ -1,7 +1,7 @@
 /**
  * admin.js
  * Lightweight admin/moderation panel. Access is gated by a simple PIN
- * stored server-side in the Settings sheet (see gas/Utils.gs -> checkAdminPin).
+ * stored server-side in the Settings sheet (see gas/Utils.gs -> verifyAdminPin).
  * For real deployments, replace this with proper authentication
  * (Google Sign-In restricted to a domain, or Apps Script OAuth).
  */
@@ -24,8 +24,8 @@ const Admin = {
 
   async moderate(reportId, action, reason = "") {
     if (!Admin.authenticated) throw new Error("Not authenticated.");
-    // action: "hide" | "unhide" | "resolve" | "delete-flagged"
-    return Api.moderateReport(reportId, "admin", action, reason);
+    // action: "hide" | "unhide" | "resolve" | "flag" | "unflag"
+    return Api.moderateReport(reportId, "admin", action, reason, Admin.pin);
   },
 
   renderPanel(reports, container) {

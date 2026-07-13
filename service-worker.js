@@ -6,7 +6,9 @@
  * to avoid showing stale emergency data.
  */
 
-const CACHE_NAME = "crowdalert-shell-v1";
+// Bump this whenever an app-shell file (HTML/CSS/JS) changes, so installed
+// clients discard the old cache-first shell and pick up the new build.
+const CACHE_NAME = "crowdalert-shell-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

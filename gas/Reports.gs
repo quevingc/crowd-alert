@@ -152,17 +152,20 @@ const Reports_ = {
     return { success: true };
   },
 
-  /** Admin moderation: hide / unhide / resolve a report */
-  moderate(reportId, moderatorId, action, reason) {
+  /** Admin moderation: hide / unhide / resolve / flag / unflag a report */
+  moderate(reportId, moderatorId, action, reason, pin) {
+    Utils_.requireAdminPin(pin);
+
     const existing = Utils_.getRowObject(SHEET_NAMES.REPORTS, "reportId", reportId);
     if (!existing) throw new Error("Report not found.");
 
     const changes = {};
     if (action === "hide") changes.hidden = true;
-    if (action === "unhide") changes.hidden = false;
-    if (action === "resolve") changes.status = "Resolved";
-    if (action === "flag") changes.flagged = true;
-    if (action === "unflag") changes.flagged = false;
+    else if (action === "unhide") changes.hidden = false;
+    else if (action === "resolve") changes.status = "Resolved";
+    else if (action === "flag") changes.flagged = true;
+    else if (action === "unflag") changes.flagged = false;
+    else throw new Error(`Unknown moderation action: ${action}`);
 
     changes.lastUpdated = Utils_.nowISO();
     Utils_.updateRow(SHEET_NAMES.REPORTS, "reportId", reportId, changes);

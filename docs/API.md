@@ -56,9 +56,11 @@ Logs a field-level entry per changed field in `Updates`, plus one
 ```
 
 ### `moderateReport` (admin)
+Requires the admin PIN (see `verifyAdminPin`) — rejected with "Invalid admin PIN." otherwise.
+Unknown `modAction` values are rejected with "Unknown moderation action: …".
 ```json
 { "action": "moderateReport", "reportId": "RPT-...", "moderatorId": "admin",
-  "action": "hide|unhide|resolve|flag|unflag", "reason": "..." }
+  "modAction": "hide|unhide|resolve|flag|unflag", "reason": "...", "pin": "..." }
 ```
 
 ## Ratings
@@ -100,6 +102,14 @@ Returns the full ordered hash-chain block list for a report:
 { "action": "getFacilities" }
 ```
 Returns evacuation centers / hospitals: `[{ facilityId, name, type, lat, lng, capacity, contact }]`
+
+### `moderateFacility` (admin)
+Requires the admin PIN (see `verifyAdminPin`) — rejected with "Invalid admin PIN." otherwise.
+Unknown `modAction` values are rejected with "Unknown moderation action: …".
+```json
+{ "action": "moderateFacility", "facilityId": "FAC-...", "moderatorId": "admin",
+  "modAction": "hide|unhide|flag|unflag", "reason": "...", "pin": "..." }
+```
 
 ## Admin auth
 

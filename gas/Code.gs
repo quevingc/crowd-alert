@@ -44,7 +44,7 @@ function handleRequest_(e) {
       upvoteReport: () => Reports_.upvote(params.reportId, params.userId),
       uploadImageMeta: () => Reports_.attachImageMeta(params.reportId, params.imageMeta),
       moderateReport: () =>
-        Reports_.moderate(params.reportId, params.moderatorId, params.action_, params.reason),
+        Reports_.moderate(params.reportId, params.moderatorId, params.modAction, params.reason, params.pin),
 
       submitRating: () => Ratings_.submit(params.reportId, params.userId, params.ratings),
 
@@ -60,17 +60,10 @@ function handleRequest_(e) {
         Facilities_.update(params.facilityId, params.changes, params.editorId, params.editorAlias),
       upvoteFacility: () => Facilities_.upvote(params.facilityId, params.userId),
       moderateFacility: () =>
-        Facilities_.moderate(params.facilityId, params.moderatorId, params.action_, params.reason),
+        Facilities_.moderate(params.facilityId, params.moderatorId, params.modAction, params.reason, params.pin),
 
       verifyAdminPin: () => Utils_.verifyAdminPin(params.pin),
     };
-
-    // moderateReport/moderateFacility's action field collides with the
-    // router's `action` key, so the frontend sends it as `action` too —
-    // normalize here before dispatch.
-    if ((action === "moderateReport" || action === "moderateFacility") && params.action) {
-      params.action_ = params.action;
-    }
 
     const handler = handlers[action];
     if (!handler) throw new Error(`Unknown action: ${action}`);
